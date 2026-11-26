@@ -10,7 +10,7 @@ These are written notes. The engine's source is private, and nothing here is cod
 - **My part.** I set the design and the rules the code has to keep, made the trade-offs, played each milestone and approved it. Claude Code wrote most of the code. The last section says how.
 - **Stack.** Rust 1.94.1 (edition 2024), a Cargo workspace of 15 crates, postcard on the wire, zstd and BLAKE3 in saves, SDL3 and wgpu in the client, cargo-nextest, cargo-fuzz, and WSL2 for the Linux leg.
 - **Three measured numbers**, all from 2026-11-24 on one desktop PC (Ryzen 9 5900X, Windows 11 Pro):
-  - Server tick with 100 enemies: p99 of 361 us and 372 us in two runs, against a budget of 8,000 us.
+  - Server tick with 100 enemies: p99 of 361 µs and 372 µs in two runs, against a budget of 8,000 µs.
   - The full gate on both systems: 3,599 tests on Windows, 1,751 on Linux, 1,850 Windows checks over the Linux leg's files, and the two state dumps identical over 14,397 lines, in 26.8 minutes.
   - Joining a generated planet: 506,592 bytes on the wire, 2.0 s at the 2 Mbit/s bulk cap.
 
@@ -74,18 +74,18 @@ The tick bench on 2026-11-24, two runs of each scenario on the PC above (`cargo 
 
 | Scenario | p50 | p99 | max | Allocations a tick |
 |---|---|---|---|---|
-| 6 players standing | 16 / 16 us | 57 / 54 us | 337 / 98 us | 153.2 |
-| 100 enemies | 94 / 91 us | 361 / 372 us | 578 / 682 us | 417.0 |
-| 6 players fighting 24 enemies | 34 / 33 us | 158 / 146 us | 288 / 231 us | 324.6 |
-| A generated planet, 6 players walking | 56 / 52 us | 141 / 116 us | 444 / 240 us | 213.6 |
+| 6 players standing | 16 / 16 µs | 57 / 54 µs | 337 / 98 µs | 153.2 |
+| 100 enemies | 94 / 91 µs | 361 / 372 µs | 578 / 682 µs | 417.0 |
+| 6 players fighting 24 enemies | 34 / 33 µs | 158 / 146 µs | 288 / 231 µs | 324.6 |
+| A generated planet, 6 players walking | 56 / 52 µs | 141 / 116 µs | 444 / 240 µs | 213.6 |
 
-The budget is 8,000 us a tick, and every p99 sits under it by more than 20 times. The canary read 38,504 us and 38,480 us against a baseline of 37,517 us. A run whose canary is more than 3% off is thrown away, and one was (3.8% off). The digests matched the baseline's in every run.
+The budget is 8,000 µs a tick, and every p99 sits under it by more than 20 times. The canary read 38,504 µs and 38,480 µs against a baseline of 37,517 µs. A run whose canary is more than 3% off is thrown away, and one was (3.8% off). The digests matched the baseline's in every run.
 
 ## What was hard, and what I traded
 
 - **Fixed point costs time.** No floats in decided state means no library maths for anything the server decides. It is slower to write, and the rule is held by a lint, not by memory.
 - **The hash is not free.** Hashing every chunk every tick reaches 8.8 ms at p99 on a full planet, more than the whole tick budget. The bench times it apart from the tick for that reason.
-- **Tails move between runs.** On 2026-11-24 the 100-enemy p99 read 361 us against an earlier baseline of 225 us, with the same digest and the same allocations to the digit. The same work, timed slower on the day. It is still open.
+- **Tails move between runs.** On 2026-11-24 the 100-enemy p99 read 361 µs against an earlier baseline of 225 µs, with the same digest and the same allocations to the digit. The same work, timed slower on the day. It is still open.
 - **The full gate is slow.** Both systems, every step, took 26.8 minutes. It runs before every merge anyway.
 - **Saves trust the file system.** Writes go to a temporary file, are flushed and renamed. On Linux the folder is flushed too. On Windows it is not, and the save relies on NTFS replaying its journal after a power cut. On exFAT or FAT32 that guarantee is gone, so worlds belong on NTFS.
 
